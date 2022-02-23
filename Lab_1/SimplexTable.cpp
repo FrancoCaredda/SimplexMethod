@@ -151,6 +151,12 @@ SimplexTable* Compute(SimplexTable& firstTable)
 {
 	SimplexTable* table = new SimplexTable(firstTable);
 
+	for (int i = 0; i < table->m_Members.size(); i++)
+	{
+		if (table->m_Members[i] < 0)
+			return nullptr;
+	}
+
 	while (true)
 	{
 		SimplexTable copy(*table);
