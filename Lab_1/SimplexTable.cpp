@@ -1,9 +1,9 @@
 #include "SimplexTable.h"
 
 SimplexTable::SimplexTable(const std::vector<uint32_t>& bases, 
-	const std::vector<float>& members, 
-	const std::vector<float>& constants, 
-	const std::vector<std::vector<float>>& system)
+	const std::vector<double>& members, 
+	const std::vector<double>& constants, 
+	const std::vector<std::vector<double>>& system)
 {
 	m_Bases = bases;
 	m_Members = members;
@@ -15,7 +15,7 @@ uint32_t SimplexTable::MainRow()
 {
 	uint32_t mainColumn = MainColumn();
 
-	std::vector<std::pair<uint32_t, float>> ratios;
+	std::vector<std::pair<uint32_t, double>> ratios;
 
 	// Computing all ratios
 	for (int i = 0; i < m_System.size(); i++)
@@ -25,7 +25,7 @@ uint32_t SimplexTable::MainRow()
 	}
 
 	// Finding minimum ration
-	float value = ratios[0].second;
+	double value = ratios[0].second;
 	uint32_t index = ratios[0].first;
 
 	for (int i = 1; i < ratios.size(); i++)
@@ -42,7 +42,7 @@ uint32_t SimplexTable::MainRow()
 
 uint32_t SimplexTable::MainColumn()
 {
-	std::vector<std::pair<uint32_t, float>> deltas;
+	std::vector<std::pair<uint32_t, double>> deltas;
 
 	// Getting all deltas
 	for (int i = 0; i < m_Deltas.size(); i++)
@@ -52,7 +52,7 @@ uint32_t SimplexTable::MainColumn()
 	}
 
 	// Finding maximum absolute delta
-	float value = -deltas[0].second;
+	double value = -deltas[0].second;
 	uint32_t index = deltas[0].first;
 
 	for (int i = 1; i < deltas.size(); i++)
@@ -104,7 +104,7 @@ void SimplexTable::ComputeDeltas()
 
 	std::fill(m_Deltas.begin(), m_Deltas.end(), 0);
 
-	float z = 0;
+	double z = 0;
 	for (int i = 0; i < m_Deltas.size(); i++)
 	{
 		z = 0;
@@ -121,14 +121,26 @@ void SimplexTable::ComputeDeltas()
 	}
 }
 
-float SimplexTable::GetFunctionValue()
+double SimplexTable::GetFunctionValue() const
 {
-	float result = 0;
+	double result = 0;
 
 	for (int i = 0; i < m_Members.size(); i++)
 		result += m_Members[i] * m_Constants[m_Bases[i]];
 
 	return result;
+}
+
+std::vector<std::pair<uint32_t, double>> SimplexTable::GetRoots() const
+{
+	std::vector<std::pair<uint32_t, double>> roots;
+
+	for (int i = 0; i < m_Bases.size(); i++)
+	{
+		roots.push_back({ m_Bases[i], m_Members[i] });
+	}
+
+	return roots;
 }
 
 static uint32_t IndexOf(const std::vector<uint32_t>& vector, uint32_t value)
@@ -157,6 +169,8 @@ SimplexTable* Compute(SimplexTable& firstTable)
 			return nullptr;
 	}
 
+	int c = 0;
+
 	while (true)
 	{
 		SimplexTable copy(*table);
@@ -175,11 +189,13 @@ SimplexTable* Compute(SimplexTable& firstTable)
 			table->m_Bases[k] = j;
 
 			// Updating main row
-			float mainElement = table->m_System[k][j];
+			double mainElement = table->m_System[k][j];
 
 			for (int s = 0; s < table->m_System[k].size(); s++)
 			{
 				table->m_System[k][s] = copy.m_System[k][s] / mainElement;
+				PrintSimplexTable(*table);
+				printf("\n");
 			}
 
 			table->m_Members[k] = copy.m_Members[k] / mainElement;
@@ -191,6 +207,9 @@ SimplexTable* Compute(SimplexTable& firstTable)
 				{
 					table->m_Members[s] = copy.m_Members[s] - copy.m_Members[k] * 
 						copy.m_System[s][j] / mainElement;
+
+					PrintSimplexTable(*table);
+					printf("\n");
 				}
 			}
 
@@ -206,6 +225,9 @@ SimplexTable* Compute(SimplexTable& firstTable)
 						{
 							table->m_System[s][l] = copy.m_System[s][l] - copy.m_System[s][j] *
 								copy.m_System[k][l] / mainElement;
+
+							PrintSimplexTable(*table);
+							printf("\n");
 						}
 					}
 				}
@@ -227,14 +249,68 @@ SimplexTable* Compute(SimplexTable& firstTable)
 					{
 						table->m_System[s][l] = 0;
 					}
+
+					PrintSimplexTable(*table);
+					printf("\n");
 				}
 			}
 
 			table->ComputeDeltas();
+
+			printf("CT-%d\n", c++);
+			PrintSimplexTable(*table);
+			printf("\n");
 		}
 		else
 		{
 			return nullptr;
 		}
 	}
+}
+
+void PrintSimplexTable(const SimplexTable& table)
+{
+	for (int i = 0; i < SCREEN_RESOLUTION_X; i++)
+		 printf("-");
+
+	printf("\n");
+	printf("x[b]\t%c\t", '|');
+	printf("P0\t%c", '|');
+
+	for (int i = 0; i < table.m_Constants.size(); i++)
+		printf("c%d=%.3lf%6c ", i, table.m_Constants[i], '|');
+
+	printf("\n");
+
+	for (int i = 0; i < SCREEN_RESOLUTION_X; i++)
+		 printf("-");
+
+	printf("\n");
+
+	for (int i = 0; i < table.m_Bases.size(); i++)
+	{
+		printf("%5d\t%c\t",table.m_Bases[i], '|');
+		printf("%5.3lf\t%c\t", table.m_Members[i], '|');
+
+		for (int j = 0; j < table.m_System[i].size(); j++)
+			printf("%5.3lf\t%c\t", table.m_System[i][j], '|');
+
+		printf("\n");
+		for (int i = 0; i < SCREEN_RESOLUTION_X; i++)
+			 printf("-");
+
+		printf("\n");
+	}
+
+	printf("Q=%3.3lf%c\t\t\t", table.GetFunctionValue(), '|');
+
+	for (int i = 0; i < table.m_Deltas.size(); i++)
+		printf("%5.3lf\t%c\t", table.m_Deltas[i], '|');
+
+	printf("\n");
+
+	for (int i = 0; i < SCREEN_RESOLUTION_X; i++)
+		printf("-");
+
+	printf("\n");
 }
