@@ -171,6 +171,10 @@ SimplexTable* Compute(SimplexTable& firstTable)
 
 	int c = 0;
 
+	printf("CT-%d\n", c++);
+	PrintSimplexTable(*table);
+	printf("\n");
+
 	while (true)
 	{
 		SimplexTable copy(*table);
@@ -187,6 +191,7 @@ SimplexTable* Compute(SimplexTable& firstTable)
 			uint32_t k = IndexOf(table->m_Bases, i);
 
 			table->m_Bases[k] = j;
+			
 
 			// Updating main row
 			double mainElement = table->m_System[k][j];
@@ -194,8 +199,6 @@ SimplexTable* Compute(SimplexTable& firstTable)
 			for (int s = 0; s < table->m_System[k].size(); s++)
 			{
 				table->m_System[k][s] = copy.m_System[k][s] / mainElement;
-				PrintSimplexTable(*table);
-				printf("\n");
 			}
 
 			table->m_Members[k] = copy.m_Members[k] / mainElement;
@@ -207,9 +210,6 @@ SimplexTable* Compute(SimplexTable& firstTable)
 				{
 					table->m_Members[s] = copy.m_Members[s] - copy.m_Members[k] * 
 						copy.m_System[s][j] / mainElement;
-
-					PrintSimplexTable(*table);
-					printf("\n");
 				}
 			}
 
@@ -225,9 +225,6 @@ SimplexTable* Compute(SimplexTable& firstTable)
 						{
 							table->m_System[s][l] = copy.m_System[s][l] - copy.m_System[s][j] *
 								copy.m_System[k][l] / mainElement;
-
-							PrintSimplexTable(*table);
-							printf("\n");
 						}
 					}
 				}
@@ -249,9 +246,6 @@ SimplexTable* Compute(SimplexTable& firstTable)
 					{
 						table->m_System[s][l] = 0;
 					}
-
-					PrintSimplexTable(*table);
-					printf("\n");
 				}
 			}
 

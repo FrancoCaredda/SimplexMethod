@@ -28,7 +28,7 @@ int main(void)
 	for (int i = 0; i < basesCount; i++)
 		std::cin >> bases[i];
 
-	std::cout << "Enter membsers: ";
+	std::cout << "Enter members: ";
 
 	for (int i = 0; i < basesCount; i++)
 		std::cin >> members[i];
